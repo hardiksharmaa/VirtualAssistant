@@ -8,8 +8,6 @@ const groq = new Groq({
 
 const groqResponse = async (command, assistantName, userName, history = []) => {
     try {
-        // 1. Format history for the AI so it remembers context
-        // We take the last 5 user messages to keep it fast
         const conversationHistory = history.map(msg => ({
             role: "user",
             content: msg
@@ -39,7 +37,7 @@ const groqResponse = async (command, assistantName, userName, history = []) => {
 
         const messages = [
             { role: "system", content: systemPrompt },
-            ...conversationHistory, // Inject history
+            ...conversationHistory,
             { role: "user", content: command }
         ];
 
