@@ -6,38 +6,45 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY
 });
 
-const groqResponse = async (command, assistantName, userName) => {
+const groqResponse = async (command, assistantName, userName, history = []) => {
     try {
-        const prompt = `You are a virtual assistant named ${assistantName} created by ${userName}. 
+        // 1. Format history for the AI so it remembers context
+        // We take the last 5 user messages to keep it fast
+        const conversationHistory = history.map(msg => ({
+            role: "user",
+            content: msg
+        }));
+
+        const systemPrompt = `You are a virtual assistant named ${assistantName} created by ${userName}. 
         You will now behave like a voice-enabled assistant.
         
-        Your task is to understand the user's natural language input and respond with a JSON object like this:
+        Your task is to understand the user's natural language input and respond with a JSON object.
         
+        JSON Structure:
         {
           "type": "general" | "google-search" | "youtube-search" | "youtube-play" | "get-time" | "get-date" | "get-day" | "get-month"|"calculator-open" | "instagram-open" |"facebook-open" |"weather-show",
           "userInput": "<original user input>",
           "response": "<a short spoken response>"
         }
         
-        Instructions:
-        - Respond ONLY with the JSON object. Do not add markdown like \`\`\`json.
-        - "type": determine the intent of the user.
-        - "response": A short, conversational voice-friendly reply.
+        CRITICAL RULES FOR "type":
+        1. "general": USE THIS FOR 95% OF QUESTIONS. If the user asks "What is Javascript?", "Who is Elon Musk?", "Tell me a joke", or "How are you?", use "general". ANSWER THE QUESTION YOURSELF in the "response" field.
+        2. "google-search": ONLY use this if the user asks for *real-time* info (e.g., "current stock price", "news today", "weather") OR explicitly says "Search for...".
+        3. "youtube-play": Use this if the user says "Play [song/video]".
         
-        now your userInput- ${command}`;
+        Context: The user has previously said: ${JSON.stringify(history)}. Use this to understand follow-up questions like "How old is he?".
+
+        Current input: ${command}
+        `;
+
+        const messages = [
+            { role: "system", content: systemPrompt },
+            ...conversationHistory, // Inject history
+            { role: "user", content: command }
+        ];
 
         const completion = await groq.chat.completions.create({
-            messages: [
-                {
-                    role: "system",
-                    content: "You are a helpful assistant that outputs only valid JSON."
-                },
-                {
-                    role: "user",
-                    content: prompt
-                }
-            ],
-            // FIX: Updated to the currently active model
+            messages: messages,
             model: "llama-3.3-70b-versatile", 
             response_format: { type: "json_object" }
         });

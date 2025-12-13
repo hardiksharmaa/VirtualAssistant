@@ -34,13 +34,19 @@ export const askToAssistant = async (req, res) => {
         const { command } = req.body;
 
         const user = await User.findById(req.userId);
+        
+        // --- NEW: Grab the last 5 messages for Context Memory ---
+        // We assume history is an array of strings. We take the last 5.
+        const recentHistory = user.history.slice(-5);
+        
         user.history.push(command);
         await user.save();
 
         const userName = user.name;
         const assistantName = user.assistantName;
 
-        const result = await groqResponse(command, assistantName, userName);
+        // --- UPDATED: Pass history to Groq ---
+        const result = await groqResponse(command, assistantName, userName, recentHistory);
 
         if (!result) {
             return res.status(500).json({ response: "I'm having trouble thinking properly right now." });

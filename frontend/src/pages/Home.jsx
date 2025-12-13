@@ -22,6 +22,15 @@ function Home() {
   const deepgramRef = useRef(null)
   const microphoneRef = useRef(null)
   const isAssistantSpeaking = useRef(false) 
+  // --- NEW: Ref to store dynamic name safely ---
+  const assistantNameRef = useRef("jarvis");
+
+  // Keep the ref updated whenever userData changes
+  useEffect(() => {
+    if (userData?.assistantName) {
+        assistantNameRef.current = userData.assistantName.toLowerCase();
+    }
+  }, [userData]);
 
   const speak = async (text) => {
     try {
@@ -113,7 +122,9 @@ function Home() {
           
           if (transcript && data.is_final && !isAssistantSpeaking.current) {
             
-            const triggerWord = userData?.assistantName?.toLowerCase() || "jarvis";
+            // --- UPDATED WAKE WORD LOGIC ---
+            // Uses the ref so it always has the latest name (even if changed in settings)
+            const triggerWord = assistantNameRef.current;
             const cleanTranscript = transcript.toLowerCase();
 
             if (cleanTranscript.includes(triggerWord)) {
@@ -168,7 +179,7 @@ function Home() {
     const handleInitialInteraction = () => {
         if (!listening) {
             startDeepgram();
-            speak(`Hello ${userData.name}, I am online.`);
+            speak(`Hello ${userData.name}, how may i assist you today?.`);
         }
         window.removeEventListener('click', handleInitialInteraction);
     };
