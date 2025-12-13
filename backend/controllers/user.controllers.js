@@ -1,4 +1,4 @@
- import uploadOnCloudinary from "../config/cloudinary.js"
+import uploadOnCloudinary from "../config/cloudinary.js"
 import geminiResponse from "../gemini.js"
 import User from "../models/user.model.js"
 import moment from "moment"
