@@ -59,10 +59,10 @@ function Home() {
         setAiText("");
   isSpeakingRef.current = false;
   setTimeout(() => {
-    startRecognition(); // ⏳ Delay se race condition avoid hoti hai
+    startRecognition(); 
   }, 800);
     }
-   synth.cancel(); // 🛑 pehle se koi speech ho to band karo
+   synth.cancel(); 
 synth.speak(utterence);
   }
 
@@ -105,9 +105,7 @@ useEffect(() => {
 
   recognitionRef.current = recognition;
 
-  let isMounted = true;  // flag to avoid setState on unmounted component
-
-  // Start recognition after 1 second delay only if component still mounted
+  let isMounted = true; 
   const startTimeout = setTimeout(() => {
     if (isMounted && !isSpeakingRef.current && !isRecognizingRef.current) {
       try {
